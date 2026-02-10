@@ -1,21 +1,31 @@
 import { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { socket } from "../socket";
+import TaskCard from "./TaskCard";
 
 export default function KanbanBoard({ tasks = [] }) {
   // TODO: Implement state and WebSocket logic
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [priority, setPriority] = useState("Medium");
+  const [category, setCategory] = useState("Feature");
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return;
 
     socket.emit("task:create", {
       title: newTaskTitle,
-      description: "",
-      priority: "Medium", //default priority
+      category: category,
+
+      priority: priority,
     });
 
     setNewTaskTitle("");
+    setCategory("Feature");
+    setPriority("Medium");
+  };
+
+  const handleDeleteTask = (taskId) => {
+    socket.emit("task:delete", taskId);
   };
 
   const onDragEnd = (result) => {
@@ -30,13 +40,13 @@ export default function KanbanBoard({ tasks = [] }) {
       destination.index === source.index
     ) {
       return;
-      }
-      const newStatus = destination.droppableId;
+    }
+    const newStatus = destination.droppableId;
 
-      socket.emit('task:move', {
-          taskId: draggableId,
-          newStatus: newStatus
-      })
+    socket.emit("task:move", {
+      taskId: draggableId,
+      newStatus: newStatus,
+    });
   };
 
   const getTasksByStatus = (status) => {
@@ -51,11 +61,27 @@ export default function KanbanBoard({ tasks = [] }) {
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
           placeholder="Enter task title..."
-          style={{ padding: "8px", marginRight: "10px" }}
+          style={{ padding: "8px", flex: 1 }}
         />
-        <button onClick={handleAddTask} style={{ padding: "8px 16px" }}>
-          Add Task
-        </button>
+        <select
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+          style={{ padding: "8px" }}
+        >
+          <option value="High">High Priority</option>
+          <option value="Medium">Medium Priority</option>
+          <option value="Low">Low Priority</option>
+        </select>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          style={{ padding: "8px" }}
+        >
+          <option value="Feature">Feature</option>
+          <option value="Bug">Bug</option>
+          <option value="Enhancement">Enhancement</option>
+        </select>
+        <button onClick={handleAddTask}>Add Task</button>
       </div>
 
       <DragDropContext onDragEnd={onDragEnd}>
@@ -81,33 +107,16 @@ export default function KanbanBoard({ tasks = [] }) {
                   <h3 style={{ textTransform: "capitalize" }}>
                     {status === "inprogress" ? "In Progress" : status}
                   </h3>
+
                   {getTasksByStatus(status).map((task, index) => (
-                    <Draggable
+                    // REFACTORED: Use the new component
+                    <TaskCard
                       key={task.id}
-                      draggableId={task.id}
+                      task={task}
                       index={index}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="task-card"
-                          style={{
-                            background: "white",
-                            padding: "10px",
-                            margin: "10px 0",
-                            borderRadius: "4px",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-                            ...provided.draggableProps.style, // Vital for smooth movement
-                          }}
-                        >
-                          {task.title}
-                        </div>
-                      )}
-                    </Draggable>
+                      onDelete={handleDeleteTask}
+                    />
                   ))}
-                  {/* Placeholder keeps the column size when empty */}
                   {provided.placeholder}
                 </div>
               )}

@@ -43,6 +43,12 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("task:delete", (taskId) => {
+    tasks = tasks.filter((t) => t.id !== taskId);
+
+    io.emit("tasks:sync", tasks);
+  });
+
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
   });
