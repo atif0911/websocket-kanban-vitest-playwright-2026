@@ -33,6 +33,16 @@ io.on("connection", (socket) => {
     io.emit("tasks:sync", tasks); //Broadcasting the updated task
   });
 
+  socket.on("task:move", ({ taskId, newStatus }) => {
+    const task = tasks.find((t) => t.id === taskId);
+
+    if (task) {
+      task.status = newStatus;
+
+      io.emit("tasks:sync", tasks);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
   });

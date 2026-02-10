@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { socket } from "../socket";
 
-export default function KanbanBoard({ tasks }) {
+export default function KanbanBoard({ tasks = [] }) {
   // TODO: Implement state and WebSocket logic
   const [newTaskTitle, setNewTaskTitle] = useState("");
 
@@ -17,8 +18,30 @@ export default function KanbanBoard({ tasks }) {
     setNewTaskTitle("");
   };
 
-  const getTasksByStatus = (status) =>
-    tasks.filter((task) => task.status === status);
+  const onDragEnd = (result) => {
+    const { destination, source, draggableId } = result;
+
+    //if dropped outside a valid position do nothing
+    if (!destination) return;
+
+    //dropped in same place do nothing
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+      }
+      const newStatus = destination.droppableId;
+
+      socket.emit('task:move', {
+          taskId: draggableId,
+          newStatus: newStatus
+      })
+  };
+
+  const getTasksByStatus = (status) => {
+    return tasks.filter((task) => task.status === status);
+  };
 
   return (
     <div className="kanban-board">
@@ -35,94 +58,63 @@ export default function KanbanBoard({ tasks }) {
         </button>
       </div>
 
-      <div
-        className="columns-container"
-        style={{ display: "flex", gap: "20px" }}
-      >
-        {/* TO DO */}
+      <DragDropContext onDragEnd={onDragEnd}>
         <div
-          className="column"
-          style={{
-            flex: 1,
-            background: "#f4f5f7",
-            padding: "10px",
-            borderRadius: "5px",
-          }}
+          className="columns-container"
+          style={{ display: "flex", gap: "20px" }}
         >
-          <h3 style={{ marginTop: 0 }}>To Do</h3>
-          {getTasksByStatus("todo").map((task) => (
-            <div
-              key={task.id}
-              className="task-card"
-              style={{
-                background: "white",
-                padding: "10px",
-                margin: "10px 0",
-                borderRadius: "4px",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-              }}
-            >
-              {task.title}
-            </div>
+          {["todo", "inprogress", "done"].map((status) => (
+            <Droppable key={status} droppableId={status}>
+              {(provided) => (
+                <div
+                  className="column"
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  style={{
+                    flex: 1,
+                    background: "#f4f5f7",
+                    padding: "10px",
+                    borderRadius: "5px",
+                    minHeight: "400px",
+                  }}
+                >
+                  <h3 style={{ textTransform: "capitalize" }}>
+                    {status === "inprogress" ? "In Progress" : status}
+                  </h3>
+                  {getTasksByStatus(status).map((task, index) => (
+                    <Draggable
+                      key={task.id}
+                      draggableId={task.id}
+                      index={index}
+                    >
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="task-card"
+                          style={{
+                            background: "white",
+                            padding: "10px",
+                            margin: "10px 0",
+                            borderRadius: "4px",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+                            ...provided.draggableProps.style, // Vital for smooth movement
+                          }}
+                        >
+                          {task.title}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {/* Placeholder keeps the column size when empty */}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
           ))}
         </div>
-
-        {/* IN PROGRESS */}
-        <div
-          className="column"
-          style={{
-            flex: 1,
-            background: "#e2e4e9",
-            padding: "10px",
-            borderRadius: "5px",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>In Progress</h3>
-          {getTasksByStatus("inprogress").map((task) => (
-            <div
-              key={task.id}
-              className="task-card"
-              style={{
-                background: "white",
-                padding: "10px",
-                margin: "10px 0",
-                borderRadius: "4px",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-              }}
-            >
-              {task.title}
-            </div>
-          ))}
-        </div>
-
-        {/* DONE */}
-        <div
-          className="column"
-          style={{
-            flex: 1,
-            background: "#d3f9d8",
-            padding: "10px",
-            borderRadius: "5px",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Done</h3>
-          {getTasksByStatus("done").map((task) => (
-            <div
-              key={task.id}
-              className="task-card"
-              style={{
-                background: "white",
-                padding: "10px",
-                margin: "10px 0",
-                borderRadius: "4px",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-              }}
-            >
-              {task.title}
-            </div>
-          ))}
-        </div>
-      </div>
+      </DragDropContext>
     </div>
   );
 }
