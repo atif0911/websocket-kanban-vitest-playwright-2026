@@ -12,40 +12,45 @@ function App() {
     //Event listeners
     function onConnect() {
       setIsConnected(true);
-      console.log("Connected to server!");
     }
     function onDisconnect() {
       setIsConnected(false);
-      console.log("DisConnected from server!");
     }
-    function onTaskSync(serverTasks) {
-      console.log("Tasks Received:", serverTasks);
+    function onTasksSync(serverTasks) {
+      console.log("Syncing tasks...", serverTasks); // Debug log
       setTasks(serverTasks);
     }
 
     //listeners
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
-    socket.on("tasks:sync", onTaskSync);
+    socket.on("tasks:sync", onTasksSync);
 
     //cleanup to avoid memory leaks
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
-      socket.off("tasks:sync", onTaskSync);
+      socket.off("tasks:sync", onTasksSync);
       socket.disconnect();
     };
   }, []);
   return (
-    <div className="App">
+    <div
+      className="App"
+      style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}
+    >
       <h1>Real-time Kanban Board</h1>
-      <KanbanBoard />
-      <p>
-        Connection Status: {isConnected ? "🟢 Connected" : "🔴 Disconnected"}
-      </p>
 
-      {/* Temporary Debug List */}
-      <pre>{JSON.stringify(tasks, null, 2)}</pre>
+      <div
+        style={{
+          marginBottom: "20px",
+          fontSize: "0.9em",
+          color: isConnected ? "green" : "red",
+        }}
+      >
+        {isConnected ? "🟢 Connected to Server" : "🔴 Disconnected"}
+      </div>
+      <KanbanBoard tasks={tasks} />
     </div>
   );
 }
