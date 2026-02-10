@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
 import KanbanBoard from "./components/KanbanBoard";
+import TaskChart from "./components/TaskChart";
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
@@ -37,19 +38,33 @@ function App() {
   return (
     <div
       className="App"
-      style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}
+      style={{
+        padding: "20px",
+        fontFamily: "Arial, sans-serif",
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}
     >
-      <h1>Real-time Kanban Board</h1>
-
+      {/* HEADER */}
       <div
         style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           marginBottom: "20px",
-          fontSize: "0.9em",
-          color: isConnected ? "green" : "red",
         }}
       >
-        {isConnected ? "🟢 Connected to Server" : "🔴 Disconnected"}
+        <h1>Real-Time Kanban Board</h1>
+        <div
+          style={{ fontSize: "0.9em", color: isConnected ? "green" : "red" }}
+        >
+          {isConnected ? "🟢 Connected" : "🔴 Disconnected"}
+        </div>
       </div>
+      {/* dashboard */}
+      <TaskChart tasks={tasks} />
+
+      {/* board */}
       <KanbanBoard tasks={tasks} />
     </div>
   );
