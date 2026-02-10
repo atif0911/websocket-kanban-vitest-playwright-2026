@@ -9,7 +9,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000/",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
 });
@@ -22,16 +22,16 @@ io.on("connection", (socket) => {
   // As soon as they connect, send them the current list of tasks.
   socket.emit("tasks:sync", tasks);
 
-  socket.on('task:create', (newTask) => {
+  socket.on("task:create", (newTask) => {
     const task = {
       ...newTask,
       id: Date.now().toString(), //Generate a unique id
-      status: 'todo' //default 
+      status: "todo", //default
     };
     tasks.push(task);
 
-    io.emit('tasks:sync', tasks); //Broadcasting the updated task
-  })
+    io.emit("tasks:sync", tasks); //Broadcasting the updated task
+  });
 
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
