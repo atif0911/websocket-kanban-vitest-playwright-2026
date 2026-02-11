@@ -1,5 +1,4 @@
 import { Draggable } from "@hello-pangea/dnd";
-import { getPriorityColor, getCategoryColor } from "../utils";
 
 export default function TaskCard({ task, index, onDelete, onUpdate }) {
   const isImage = (url) => {
@@ -11,15 +10,19 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
     <Draggable draggableId={task._id || task.id} index={index}>
       {(provided, snapshot) => (
         <div
+          // Changed to static ID for easier filtering in tests
+          data-testid="task-card"
+          id={`task-card-${task._id || task.id}`}
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
+          tabIndex={0}
           style={{
             userSelect: "none",
             padding: "16px",
             margin: "0 0 8px 0",
             minHeight: "50px",
-            backgroundColor: snapshot.isDragging ? "#e0e7ff" : "white", // Highlight on drag
+            backgroundColor: snapshot.isDragging ? "#e0e7ff" : "white",
             color: "#334155",
             borderRadius: "8px",
             boxShadow:
@@ -37,6 +40,7 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
             }}
           >
             <span
+              data-testid="task-priority"
               style={{
                 fontSize: "12px",
                 fontWeight: "600",
@@ -63,6 +67,7 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
             <div style={{ display: "flex", gap: "8px" }}>
               <button
                 onClick={onUpdate}
+                data-testid="task-edit-btn"
                 style={{
                   cursor: "pointer",
                   border: "none",
@@ -75,6 +80,7 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
               </button>
               <button
                 onClick={onDelete}
+                data-testid="task-delete-btn"
                 style={{
                   cursor: "pointer",
                   border: "none",
@@ -89,11 +95,14 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
           </div>
 
           {/* --- 2. TASK TITLE --- */}
-          <div style={{ fontWeight: "500", marginBottom: "10px" }}>
+          <div
+            data-testid="task-title"
+            style={{ fontWeight: "500", marginBottom: "10px" }}
+          >
             {task.title}
           </div>
 
-          {/* --- 3. IMAGE / FILE ATTACHMENT (The Fix) --- */}
+          {/* --- 3. IMAGE / FILE ATTACHMENT --- */}
           {task.fileUrl && (
             <div
               style={{
@@ -103,10 +112,10 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
               }}
             >
               {isImage(task.fileUrl) ? (
-                // If it's an image, show it
                 <img
                   src={task.fileUrl}
                   alt="Task attachment"
+                  data-testid="task-img"
                   style={{
                     width: "100%",
                     height: "auto",
@@ -116,14 +125,14 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
                   }}
                   onError={(e) => {
                     e.target.style.display = "none";
-                  }} // Hide if link breaks
+                  }}
                 />
               ) : (
-                // If it's a PDF/Doc, show a link
                 <a
                   href={task.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-testid="task-file-link"
                   style={{
                     fontSize: "12px",
                     color: "#4f46e5",
@@ -138,6 +147,7 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
 
           {/* --- 4. CATEGORY FOOTER --- */}
           <div
+            data-testid="task-category"
             style={{ fontSize: "12px", color: "#64748b", marginTop: "auto" }}
           >
             {task.category || "Feature"}

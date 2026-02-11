@@ -45,9 +45,9 @@ export default function EditTaskModal({ task, onClose, onSave }) {
     setUploading(false);
   };
 
-  //
   return (
     <div
+      data-testid="edit-modal-overlay"
       style={{
         position: "fixed",
         top: 0,
@@ -62,6 +62,7 @@ export default function EditTaskModal({ task, onClose, onSave }) {
       }}
     >
       <div
+        data-testid="edit-modal-content"
         style={{
           backgroundColor: "white",
           padding: "20px",
@@ -75,9 +76,9 @@ export default function EditTaskModal({ task, onClose, onSave }) {
           onSubmit={handleSubmit}
           style={{ display: "flex", flexDirection: "column", gap: "15px" }}
         >
-          {/* TITLE INPUT */}
           <input
             value={title}
+            data-testid="edit-title-input"
             onChange={(e) => setTitle(e.target.value)}
             style={{
               padding: "8px",
@@ -88,7 +89,6 @@ export default function EditTaskModal({ task, onClose, onSave }) {
             placeholder="Task Title"
           />
 
-          {/* FILE UPLOAD INPUT */}
           <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
             <label
               style={{ fontSize: "12px", fontWeight: "bold", color: "#555" }}
@@ -97,10 +97,22 @@ export default function EditTaskModal({ task, onClose, onSave }) {
             </label>
             <input
               type="file"
-              onChange={(e) => setSelectedFile(e.target.files[0])}
+              data-testid="file-input"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  if (file.size > 5 * 1024 * 1024) {
+                    alert(
+                      "File is too large! Please upload a file smaller than 5MB.",
+                    );
+                    e.target.value = "";
+                    return;
+                  }
+                  setSelectedFile(file);
+                }
+              }}
               style={{ fontSize: "14px" }}
             />
-            {/* Show existing file link if it exists */}
             {task.fileUrl && !selectedFile && (
               <div
                 style={{ fontSize: "12px", color: "green", marginTop: "2px" }}
@@ -108,6 +120,7 @@ export default function EditTaskModal({ task, onClose, onSave }) {
                 Current File:{" "}
                 <a
                   href={task.fileUrl}
+                  data-testid="current-file-link"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -117,9 +130,9 @@ export default function EditTaskModal({ task, onClose, onSave }) {
             )}
           </div>
 
-          {/* PRIORITY SELECT */}
           <select
             value={priority}
+            data-testid="edit-priority-select"
             onChange={(e) => setPriority(e.target.value)}
             style={{
               padding: "8px",
@@ -133,9 +146,9 @@ export default function EditTaskModal({ task, onClose, onSave }) {
             <option value="Low">Low</option>
           </select>
 
-          {/* CATEGORY SELECT */}
           <select
             value={category}
+            data-testid="edit-category-select"
             onChange={(e) => setCategory(e.target.value)}
             style={{
               padding: "8px",
@@ -149,14 +162,14 @@ export default function EditTaskModal({ task, onClose, onSave }) {
             <option value="Enhancement">Enhancement</option>
           </select>
 
-          {/* BUTTONS */}
           <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
             <button
               type="submit"
-              disabled={uploading} // Prevent double clicks
+              data-testid="save-edit-btn"
+              disabled={uploading}
               style={{
                 padding: "8px 16px",
-                backgroundColor: uploading ? "#93c5fd" : "#4f46e5", 
+                backgroundColor: uploading ? "#93c5fd" : "#4f46e5",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
@@ -169,6 +182,7 @@ export default function EditTaskModal({ task, onClose, onSave }) {
             <button
               type="button"
               onClick={onClose}
+              data-testid="cancel-edit-btn"
               disabled={uploading}
               style={{
                 padding: "8px 16px",

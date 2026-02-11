@@ -41,15 +41,14 @@ export default function TaskChart() {
       socket.off("task:deleted");
     };
   }, []);
-  //count calculation
+
   const todoCount = tasks.filter((t) => t.status === "Todo").length;
   const inProgressCount = tasks.filter(
-    (t) => t.status === "In Progress",
+    (t) => t.status === "In-Progress",
   ).length;
   const doneCount = tasks.filter((t) => t.status === "Done").length;
   const total = tasks.length;
 
-  //prepare data
   const data = [
     {
       name: "To Do",
@@ -57,7 +56,7 @@ export default function TaskChart() {
       fill: "#8884d8",
     },
     {
-      name: "In Progress",
+      name: "In-Progress",
       count: inProgressCount,
       fill: "#82ca9d",
     },
@@ -68,11 +67,11 @@ export default function TaskChart() {
     },
   ];
 
-  //completion percentage
   const completionRate =
     total === 0 ? 0 : Math.round((doneCount / total) * 100);
   return (
     <div
+      data-testid="task-chart-container"
       style={{
         background: "white",
         padding: "20px",
@@ -81,7 +80,6 @@ export default function TaskChart() {
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       }}
     >
-      {/* header */}
       <div
         style={{
           display: "flex",
@@ -89,23 +87,31 @@ export default function TaskChart() {
           marginBottom: "20px",
         }}
       >
-        <h2>Project Dashboard</h2>
+        <h2 data-testid="chart-title">Project Dashboard</h2>
         <div style={{ textAlign: "right" }}>
-          <span style={{ fontSize: "24px", fontWeight: "bold", color: "#333" }}>
+          <span
+            data-testid="completion-rate-value"
+            style={{ fontSize: "24px", fontWeight: "bold", color: "#333" }}
+          >
             {completionRate}%
           </span>
-          <span style={{ display: "block", fontSize: "12px", color: "#666" }}>
+          <span
+            data-testid="completion-rate-label"
+            style={{ display: "block", fontSize: "12px", color: "#666" }}
+          >
             Completion Rate
           </span>
         </div>
       </div>
 
-      {/* chart */}
-      <div style={{ width: "100%", height: 300 }}>
+      <div
+        data-testid="recharts-wrapper"
+        style={{ width: "100%", height: 300 }}
+      >
         <ResponsiveContainer>
           <BarChart data={data}>
             <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} /> {/* Don't show "1.5 tasks" */}
+            <YAxis allowDecimals={false} />
             <Tooltip />
             <Legend />
             <Bar

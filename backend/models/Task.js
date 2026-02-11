@@ -4,7 +4,7 @@ const TaskSchema = new mongoose.Schema({
   description: { type: String },
   status: {
     type: String,
-    enum: ["Todo", "In Progress", "Done"],
+    enum: ["Todo", "In-Progress", "Done"],
     default: "Todo",
   },
   category: {

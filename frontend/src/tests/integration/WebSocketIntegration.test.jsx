@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from "vitest";
 import KanbanBoard from "../../components/KanbanBoard";
 import { socket } from "../../socket";
 
-// This allows us to spy on 'socket.emit' to see if it was called
 vi.mock("../../socket", () => ({
   socket: {
     on: vi.fn(),
@@ -12,10 +11,32 @@ vi.mock("../../socket", () => ({
   },
 }));
 
+vi.mock("@hello-pangea/dnd", () => ({
+  DragDropContext: ({ children }) => <div>{children}</div>,
+  Droppable: ({ children }) =>
+    children(
+      {
+        draggableProps: {},
+        innerRef: vi.fn(),
+        placeholder: null,
+      },
+      {},
+    ),
+  Draggable: ({ children }) =>
+    children(
+      {
+        draggableProps: {},
+        dragHandleProps: {},
+        innerRef: vi.fn(),
+      },
+      {},
+    ),
+}));
+
 describe("WebSocket Integration", () => {
   it("emits a socket event when a task is created", () => {
-    // Render the board
-    render(<KanbanBoard tasks={[]} />);
+    // Render the board (no props needed since state is internal)
+    render(<KanbanBoard />);
 
     // Find elements
     const input = screen.getByPlaceholderText(/Enter task title/i);
@@ -32,8 +53,9 @@ describe("WebSocket Integration", () => {
       "task:create",
       expect.objectContaining({
         title: "New Integration Task",
-        priority: "Medium", // Default
-        category: "Feature", // Default
+        priority: "Medium", // Default state
+        category: "Feature", // Default state
+        status: "Todo", // Explicitly sent by handleAddTask
       }),
     );
   });

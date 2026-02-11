@@ -5,7 +5,6 @@ import EditTaskModal from "./EditTaskModal";
 import TaskCard from "./TaskCard";
 
 export default function KanbanBoard() {
-  // TODO: Implement state and WebSocket logic
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [priority, setPriority] = useState("Medium");
@@ -75,10 +74,8 @@ export default function KanbanBoard() {
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
 
-    //if dropped outside a valid position do nothing
     if (!destination) return;
 
-    //dropped in same place do nothing
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index
@@ -104,9 +101,10 @@ export default function KanbanBoard() {
   };
 
   return (
-    <div className="kanban-board">
+    <div className="kanban-board" data-testid="kanban-board">
       <div
         className="add-task-bar"
+        data-testid="add-task-bar"
         style={{
           background: "white",
           padding: "20px",
@@ -122,6 +120,7 @@ export default function KanbanBoard() {
       >
         <input
           type="text"
+          data-testid="task-title-input"
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
           placeholder="Enter task title..."
@@ -138,6 +137,7 @@ export default function KanbanBoard() {
         />
         <select
           value={priority}
+          data-testid="priority-select"
           onChange={(e) => setPriority(e.target.value)}
           style={{
             padding: "12px 16px",
@@ -157,6 +157,7 @@ export default function KanbanBoard() {
         </select>
         <select
           value={category}
+          data-testid="category-select"
           onChange={(e) => setCategory(e.target.value)}
           style={{
             padding: "12px 16px",
@@ -176,11 +177,12 @@ export default function KanbanBoard() {
         </select>
         <button
           onClick={handleAddTask}
+          data-testid="add-task-btn"
           style={{
             padding: "12px 24px",
             borderRadius: "8px",
             border: "none",
-            backgroundColor: "#4f46e5", // Indigo-600
+            backgroundColor: "#4f46e5",
             color: "white",
             fontSize: "16px",
             fontWeight: "600",
@@ -197,13 +199,15 @@ export default function KanbanBoard() {
       <DragDropContext onDragEnd={onDragEnd}>
         <div
           className="columns-container"
+          data-testid="columns-container"
           style={{ display: "flex", gap: "20px" }}
         >
-          {["Todo", "In Progress", "Done"].map((status) => (
+          {["Todo", "In-Progress", "Done"].map((status) => (
             <Droppable key={status} droppableId={status}>
               {(provided) => (
                 <div
                   className="column"
+                  data-testid={`column-${status}`}
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                   style={{
@@ -214,8 +218,11 @@ export default function KanbanBoard() {
                     minHeight: "400px",
                   }}
                 >
-                  <h3 style={{ textTransform: "capitalize" }}>
-                    {status === "inprogress" ? "In Progress" : status}
+                  <h3
+                    data-testid={`column-header-${status}`}
+                    style={{ textTransform: "capitalize" }}
+                  >
+                    {status === "inprogress" ? "In-Progress" : status}
                   </h3>
 
                   {getTasksByStatus(status).map((task, index) => (
@@ -239,7 +246,7 @@ export default function KanbanBoard() {
           task={editingTask}
           onClose={() => setEditingTask(null)}
           onSave={handleSaveEdit}
-        ></EditTaskModal>
+        />
       )}
     </div>
   );
