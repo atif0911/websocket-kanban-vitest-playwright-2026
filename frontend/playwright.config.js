@@ -1,8 +1,8 @@
 // playwright.config.js
-import { defineConfig } from "@playwright/test";
+import { defineConfig,devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/e2e", // Path to your test files
+  testDir: "./src/tests/e2e", // Path to your test files
   timeout: 20 * 1000, // Test timeout in milliseconds
   use: {
     headless: false, // Run tests in headless mode

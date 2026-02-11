@@ -15,6 +15,7 @@ const io = new Server(server, {
 });
 
 let tasks = []; //in-memory storage
+
 io.on("connection", (socket) => {
   console.log(`A user connected: ${socket.id}`);
 

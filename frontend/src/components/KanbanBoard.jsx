@@ -58,18 +58,51 @@ export default function KanbanBoard({ tasks = [] }) {
 
   return (
     <div className="kanban-board">
-      <div className="add-task-bar" style={{ marginBottom: "20px" }}>
+      <div
+        className="add-task-bar"
+        style={{
+          background: "white",
+          padding: "20px",
+          borderRadius: "12px",
+          boxShadow:
+            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          marginBottom: "30px",
+          display: "flex",
+          gap: "15px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
         <input
           type="text"
           value={newTaskTitle}
           onChange={(e) => setNewTaskTitle(e.target.value)}
           placeholder="Enter task title..."
-          style={{ padding: "8px", flex: 1 }}
+          style={{
+            flex: 1,
+            minWidth: "200px",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            border: "2px solid #e2e8f0",
+            fontSize: "16px",
+            outline: "none",
+            color: "#334155",
+          }}
         />
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
-          style={{ padding: "8px" }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: "8px",
+            border: "2px solid #e2e8f0",
+            backgroundColor: "white",
+            color: "#475569",
+            fontSize: "14px",
+            fontWeight: "500",
+            cursor: "pointer",
+            minWidth: "140px",
+          }}
         >
           <option value="High">High Priority</option>
           <option value="Medium">Medium Priority</option>
@@ -78,13 +111,40 @@ export default function KanbanBoard({ tasks = [] }) {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          style={{ padding: "8px" }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: "8px",
+            border: "2px solid #e2e8f0",
+            backgroundColor: "white",
+            color: "#475569",
+            fontSize: "14px",
+            fontWeight: "500",
+            cursor: "pointer",
+            minWidth: "130px",
+          }}
         >
           <option value="Feature">Feature</option>
           <option value="Bug">Bug</option>
           <option value="Enhancement">Enhancement</option>
         </select>
-        <button onClick={handleAddTask}>Add Task</button>
+        <button
+          onClick={handleAddTask}
+          style={{
+            padding: "12px 24px",
+            borderRadius: "8px",
+            border: "none",
+            backgroundColor: "#4f46e5", // Indigo-600
+            color: "white",
+            fontSize: "16px",
+            fontWeight: "600",
+            cursor: "pointer",
+            boxShadow: "0 4px 6px rgba(79, 70, 229, 0.3)",
+            transition: "transform 0.1s ease",
+            minWidth: "120px",
+          }}
+        >
+          Add Task
+        </button>
       </div>
 
       <DragDropContext onDragEnd={onDragEnd}>
