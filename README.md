@@ -48,11 +48,11 @@ A collaborative, real-time project management tool built for the 2026 Internship
 
 ### 1. Clone the Repository
 
-```bash
 git clone https://github.com/atif0911/websocket-kanban-vitest-playwright-2026.git
 cd websocket-kanban-vitest-playwright-2026
 
 ### 2. Backend Setup
+
 Navigate to the server folder and install dependencies.
 
 cd backend
@@ -65,23 +65,27 @@ CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 
 Start the server:
 npm run dev
+
 # Server running on port 5000
 
-
 ### 3. Frontend Setup
+
 Open a new terminal, navigate to the client folder.
 cd client
 npm install
 
 Start the React app:
 npm run dev
+
 # App running at http://localhost:3000
 
 🧪 Testing
+
 1. This project includes Unit Tests for UI components.
+
 # Run tests
-npm test
-2. This project includes UI test
+
+npm test 2. This project includes UI test
 npx playwright test
 
 👤 Author
@@ -91,4 +95,3 @@ LinkedIn: https://www.linkedin.com/in/atif-ali-sardar-9131a424a
 Github: https://github.com/atif0911/
 College: Heritage Institute of Technology
 Project: Internship Selection Task 2026
-```
