@@ -1,16 +1,8 @@
-// import { render, screen } from "@testing-library/react";import { describe, it, expect, vi } from "vitest";
-// import KanbanBoard from "../../src/components/KanbanBoard";
-
-// test("renders Kanban board title", () => {
-//   render(<KanbanBoard />);
-//   expect(screen.getByText("Kanban Board")).toBeInTheDocument();
-// });
-
-// // TODO: Add more unit tests for individual components
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import KanbanBoard from "../../components/KanbanBoard"; // FIXED PATH
+import KanbanBoard from "../../components/KanbanBoard"; 
 
+// TODO: Add more unit tests for individual components
 // Mock the socket so the component doesn't crash trying to connect
 vi.mock("../../socket", () => ({
   socket: {

@@ -41,7 +41,7 @@ describe("Task Validation Logic", () => {
     ];
     const { container } = render(<KanbanBoard tasks={mockTasks} />);
 
-    // Create a fake file that is 2MB (too big!)
+    // Create a fake file that is 2MB
     // 2 * 1024 * 1024 bytes
     const largeFile = new File(
       ["a".repeat(2 * 1024 * 1024)],
@@ -50,7 +50,6 @@ describe("Task Validation Logic", () => {
     );
 
     // Find the hidden file input
-    // (We use container.querySelector because the input is hidden/no text)
     const fileInput = container.querySelector('input[type="file"]');
 
     // Simulate user selecting the file

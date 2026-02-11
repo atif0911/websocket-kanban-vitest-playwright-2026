@@ -34,7 +34,7 @@ export default function TaskCard({ task, index, onDelete, onUpdate }) {
             margin: "10px 0",
             borderRadius: "6px",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            position: "relative", // Needed for the delete button positioning
+            position: "relative", 
             ...provided.draggableProps.style,
           }}
         >
