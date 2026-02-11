@@ -1,29 +1,23 @@
 import { Draggable } from "@hello-pangea/dnd";
+import { getPriorityColor, getCategoryColor } from "../utils";
 
-export default function TaskCard({ task, index, onDelete }) {
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "High":
-        return "#ffadad";
-      case "Medium":
-        return "#ffd6a5";
-      case "Low":
-        return "#caffbf";
-      default:
-        return "#e0e0e0";
+export default function TaskCard({ task, index, onDelete, onUpdate }) {
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    //limiting file size to one mb to prevent socket lag
+    if (file.size > 1024 * 1024) {
+      alert("File is too large! Please choose an image under 1MB.");
+      return;
     }
-  };
-  const getCategoryColor = (cat) => {
-    switch (cat) {
-      case "Bug":
-        return "red";
-      case "Feature":
-        return "blue";
-      case "Enhancement":
-        return "green";
-      default:
-        return "grey";
-    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result;
+
+      onUpdate({ ...task, image: base64String });
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -44,6 +38,20 @@ export default function TaskCard({ task, index, onDelete }) {
             ...provided.draggableProps.style,
           }}
         >
+          {/* image preview if exists */}
+          {task.image && (
+            <img
+              src={task.image}
+              alt="attachment"
+              style={{
+                width: "100%",
+                height: "150px",
+                objectFit: "cover",
+                borderRadius: "4px",
+                marginBottom: "10px",
+              }}
+            />
+          )}
           {/* 1. Header: Title & Delete */}
           <div
             style={{
@@ -77,19 +85,43 @@ export default function TaskCard({ task, index, onDelete }) {
             ● {task.category || "Feature"}
           </div>
           {/* 2. Footer: Priority Badge */}
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span
-              style={{
-                fontSize: "12px",
-                padding: "4px 8px",
-                borderRadius: "12px",
-                background: getPriorityColor(task.priority),
-                color: "#333",
-                fontWeight: "500",
-              }}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: "10px",
+            }}
+          >
+            <div style={{ display: "flex", gap: "5px" }}>
+              <span
+                style={{
+                  fontSize: "12px",
+                  padding: "4px 8px",
+                  borderRadius: "12px",
+                  background: getPriorityColor(task.priority),
+                  color: "#333",
+                  fontWeight: "500",
+                }}
+              >
+                {task.priority || "Medium"}
+              </span>
+            </div>
+            {/* Right side: Upload Button */}
+            <label
+              style={{ cursor: "pointer", color: "#555" }}
+              title="Attach Image"
             >
-              {task.priority || "Medium"}
-            </span>
+              {/* The hidden magic input */}
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleImageUpload}
+              />
+              {/* Image icon */}
+              📎
+            </label>
           </div>
         </div>
       )}

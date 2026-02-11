@@ -27,6 +27,9 @@ export default function KanbanBoard({ tasks = [] }) {
   const handleDeleteTask = (taskId) => {
     socket.emit("task:delete", taskId);
   };
+  const handleUpdateTask = (updatedTask) => {
+    socket.emit("task:update", updatedTask);
+  };
 
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
@@ -109,12 +112,12 @@ export default function KanbanBoard({ tasks = [] }) {
                   </h3>
 
                   {getTasksByStatus(status).map((task, index) => (
-                    // REFACTORED: Use the new component
                     <TaskCard
                       key={task.id}
                       task={task}
                       index={index}
                       onDelete={handleDeleteTask}
+                      onUpdate={handleUpdateTask}
                     />
                   ))}
                   {provided.placeholder}

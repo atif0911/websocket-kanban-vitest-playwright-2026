@@ -49,6 +49,16 @@ io.on("connection", (socket) => {
     io.emit("tasks:sync", tasks);
   });
 
+  socket.on("task:update", (updatedTask) => {
+    const index = tasks.findIndex((t) => t.id === updatedTask.id);
+
+    if (index !== -1) {
+      tasks[index] = { ...tasks[index], ...updatedTask };
+
+      io.emit('tasks:sync',tasks)
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
   });
