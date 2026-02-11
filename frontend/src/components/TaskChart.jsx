@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -7,12 +8,45 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { socket } from "../socket";
 
-export default function TaskChart({ tasks = [] }) {
+export default function TaskChart() {
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    socket.emit("task:load");
+    socket.on("tasks:initial", (loadedTasks) => setTasks(loadedTasks));
+    socket.on("task:created", (newTask) => {
+      setTasks((prev) => [...prev, newTask]);
+    });
+    socket.on("task:updated", (updatedTask) => {
+      setTasks((prev) =>
+        prev.map((t) => (t._id === updatedTask._id ? updatedTask : t)),
+      );
+    });
+    socket.on("task:moved", (movedTask) => {
+      setTasks((prev) =>
+        prev.map((t) => (t._id === movedTask._id ? movedTask : t)),
+      );
+    });
+    socket.on("task:deleted", (deletedId) => {
+      setTasks((prev) => prev.filter((t) => t._id !== deletedId));
+    });
+
+    return () => {
+      socket.off("tasks:initial");
+      socket.off("task:created");
+      socket.off("task:updated");
+      socket.off("task:moved");
+      socket.off("task:deleted");
+    };
+  }, []);
   //count calculation
-  const todoCount = tasks.filter((t) => t.status === "todo").length;
-  const inProgressCount = tasks.filter((t) => t.status === "inprogress").length;
-  const doneCount = tasks.filter((t) => t.status === "done").length;
+  const todoCount = tasks.filter((t) => t.status === "Todo").length;
+  const inProgressCount = tasks.filter(
+    (t) => t.status === "In Progress",
+  ).length;
+  const doneCount = tasks.filter((t) => t.status === "Done").length;
   const total = tasks.length;
 
   //prepare data

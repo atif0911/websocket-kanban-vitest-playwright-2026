@@ -35,6 +35,7 @@ function App() {
       socket.disconnect();
     };
   }, []);
+  console.log;
   return (
     <div
       className="App"
@@ -62,10 +63,10 @@ function App() {
         </div>
       </div>
       {/* dashboard */}
-      <TaskChart tasks={tasks} />
+      <TaskChart/>
 
       {/* board */}
-      <KanbanBoard tasks={tasks} />
+      <KanbanBoard />
     </div>
   );
 }

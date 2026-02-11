@@ -14,7 +14,12 @@
   "dependencies": {
     "@playwright/test": "^1.50.1",
     "@testing-library/react": "^16.2.0",
+    "cloudinary": "^1.41.3",
+    "dotenv": "^17.2.4",
     "express": "^4.21.2",
+    "mongoose": "^9.2.0",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
     "nodemon": "^3.1.9",
     "socket.io": "^4.8.1"
   },

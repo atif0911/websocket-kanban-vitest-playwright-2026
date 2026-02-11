@@ -1,13 +1,45 @@
-import { useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { useState, useEffect } from "react";
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { socket } from "../socket";
+import EditTaskModal from "./EditTaskModal";
 import TaskCard from "./TaskCard";
 
-export default function KanbanBoard({ tasks = [] }) {
+export default function KanbanBoard() {
   // TODO: Implement state and WebSocket logic
+  const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [priority, setPriority] = useState("Medium");
   const [category, setCategory] = useState("Feature");
+  const [editingTask, setEditingTask] = useState(null);
+
+  useEffect(() => {
+    socket.emit("task:load");
+    socket.on("tasks:initial", (loadedTasks) => setTasks(loadedTasks));
+    socket.on("task:created", (newTask) => {
+      setTasks((prev) => [...prev, newTask]);
+    });
+    socket.on("task:updated", (updatedTask) => {
+      setTasks((prev) =>
+        prev.map((t) => (t._id === updatedTask._id ? updatedTask : t)),
+      );
+    });
+    socket.on("task:moved", (movedTask) => {
+      setTasks((prev) =>
+        prev.map((t) => (t._id === movedTask._id ? movedTask : t)),
+      );
+    });
+    socket.on("task:deleted", (deletedId) => {
+      setTasks((prev) => prev.filter((t) => t._id !== deletedId));
+    });
+
+    return () => {
+      socket.off("tasks:initial");
+      socket.off("task:created");
+      socket.off("task:updated");
+      socket.off("task:moved");
+      socket.off("task:deleted");
+    };
+  }, []);
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return;
@@ -15,7 +47,7 @@ export default function KanbanBoard({ tasks = [] }) {
     socket.emit("task:create", {
       title: newTaskTitle,
       category: category,
-
+      status: "Todo",
       priority: priority,
     });
 
@@ -25,10 +57,19 @@ export default function KanbanBoard({ tasks = [] }) {
   };
 
   const handleDeleteTask = (taskId) => {
+    setTasks((prev) => prev.filter((t) => t._id !== taskId));
     socket.emit("task:delete", taskId);
   };
-  const handleUpdateTask = (updatedTask) => {
-    socket.emit("task:update", updatedTask);
+  const handleEditClick = (task) => {
+    setEditingTask(task);
+  };
+
+  const handleSaveEdit = (taskData) => {
+    setTasks((prev) =>
+      prev.map((t) => (t._id === taskData._id ? taskData : t)),
+    );
+    socket.emit("task:update", taskData);
+    setEditingTask(null);
   };
 
   const onDragEnd = (result) => {
@@ -45,6 +86,12 @@ export default function KanbanBoard({ tasks = [] }) {
       return;
     }
     const newStatus = destination.droppableId;
+
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task._id === draggableId ? { ...task, status: newStatus } : task,
+      ),
+    );
 
     socket.emit("task:move", {
       taskId: draggableId,
@@ -152,7 +199,7 @@ export default function KanbanBoard({ tasks = [] }) {
           className="columns-container"
           style={{ display: "flex", gap: "20px" }}
         >
-          {["todo", "inprogress", "done"].map((status) => (
+          {["Todo", "In Progress", "Done"].map((status) => (
             <Droppable key={status} droppableId={status}>
               {(provided) => (
                 <div
@@ -173,11 +220,11 @@ export default function KanbanBoard({ tasks = [] }) {
 
                   {getTasksByStatus(status).map((task, index) => (
                     <TaskCard
-                      key={task.id}
+                      key={task._id || task.id}
                       task={task}
                       index={index}
-                      onDelete={handleDeleteTask}
-                      onUpdate={handleUpdateTask}
+                      onDelete={() => handleDeleteTask(task._id)}
+                      onUpdate={() => handleEditClick(task)}
                     />
                   ))}
                   {provided.placeholder}
@@ -187,6 +234,13 @@ export default function KanbanBoard({ tasks = [] }) {
           ))}
         </div>
       </DragDropContext>
+      {editingTask && (
+        <EditTaskModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSave={handleSaveEdit}
+        ></EditTaskModal>
+      )}
     </div>
   );
 }

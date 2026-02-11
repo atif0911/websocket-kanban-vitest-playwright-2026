@@ -2,126 +2,145 @@ import { Draggable } from "@hello-pangea/dnd";
 import { getPriorityColor, getCategoryColor } from "../utils";
 
 export default function TaskCard({ task, index, onDelete, onUpdate }) {
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    //limiting file size to one mb to prevent socket lag
-    if (file.size > 1024 * 1024) {
-      alert("File is too large! Please choose an image under 1MB.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result;
-
-      onUpdate({ ...task, image: base64String });
-    };
-    reader.readAsDataURL(file);
+  const isImage = (url) => {
+    if (!url) return false;
+    return url.match(/\.(jpeg|jpg|gif|png|webp)$/) != null;
   };
 
   return (
-    <Draggable draggableId={task.id} index={index}>
-      {(provided) => (
+    <Draggable draggableId={task._id || task.id} index={index}>
+      {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className="task-card"
           style={{
-            background: "white",
-            padding: "12px",
-            margin: "10px 0",
-            borderRadius: "6px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            position: "relative", 
+            userSelect: "none",
+            padding: "16px",
+            margin: "0 0 8px 0",
+            minHeight: "50px",
+            backgroundColor: snapshot.isDragging ? "#e0e7ff" : "white", // Highlight on drag
+            color: "#334155",
+            borderRadius: "8px",
+            boxShadow:
+              "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+            border: "1px solid #e2e8f0",
             ...provided.draggableProps.style,
           }}
         >
-          {/* image preview if exists */}
-          {task.image && (
-            <img
-              src={task.image}
-              alt="attachment"
+          {/* --- 1. TASK HEADER (Title & Priority) --- */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "8px",
+            }}
+          >
+            <span
               style={{
-                width: "100%",
-                height: "150px",
-                objectFit: "cover",
+                fontSize: "12px",
+                fontWeight: "600",
+                padding: "2px 8px",
                 borderRadius: "4px",
-                marginBottom: "10px",
-              }}
-            />
-          )}
-          {/* 1. Header: Title & Delete */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "8px",
-            }}
-          >
-            <span style={{ fontWeight: "bold" }}>{task.title}</span>
-            <button
-              onClick={() => onDelete(task.id)}
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: "#ff6b6b",
-                fontSize: "16px",
+                backgroundColor:
+                  task.priority === "High"
+                    ? "#fee2e2"
+                    : task.priority === "Medium"
+                      ? "#fef3c7"
+                      : "#dcfce7",
+                color:
+                  task.priority === "High"
+                    ? "#991b1b"
+                    : task.priority === "Medium"
+                      ? "#92400e"
+                      : "#166534",
               }}
             >
-              ✖
-            </button>
-          </div>
-          <div
-            style={{
-              marginBottom: "8px",
-              fontSize: "12px",
-              color: getCategoryColor(task.category),
-            }}
-          >
-            ● {task.category || "Feature"}
-          </div>
-          {/* 2. Footer: Priority Badge */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "10px",
-            }}
-          >
-            <div style={{ display: "flex", gap: "5px" }}>
-              <span
+              {task.priority}
+            </span>
+
+            {/* Edit/Delete Actions */}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button
+                onClick={onUpdate}
                 style={{
-                  fontSize: "12px",
-                  padding: "4px 8px",
-                  borderRadius: "12px",
-                  background: getPriorityColor(task.priority),
-                  color: "#333",
-                  fontWeight: "500",
+                  cursor: "pointer",
+                  border: "none",
+                  background: "transparent",
+                  fontSize: "14px",
                 }}
+                title="Edit Task"
               >
-                {task.priority || "Medium"}
-              </span>
+                ✏️
+              </button>
+              <button
+                onClick={onDelete}
+                style={{
+                  cursor: "pointer",
+                  border: "none",
+                  background: "transparent",
+                  fontSize: "14px",
+                }}
+                title="Delete Task"
+              >
+                🗑️
+              </button>
             </div>
-            {/* Right side: Upload Button */}
-            <label
-              style={{ cursor: "pointer", color: "#555" }}
-              title="Attach Image"
+          </div>
+
+          {/* --- 2. TASK TITLE --- */}
+          <div style={{ fontWeight: "500", marginBottom: "10px" }}>
+            {task.title}
+          </div>
+
+          {/* --- 3. IMAGE / FILE ATTACHMENT (The Fix) --- */}
+          {task.fileUrl && (
+            <div
+              style={{
+                marginBottom: "12px",
+                borderRadius: "6px",
+                overflow: "hidden",
+              }}
             >
-              {/* The hidden magic input */}
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={handleImageUpload}
-              />
-              {/* Image icon */}
-              📎
-            </label>
+              {isImage(task.fileUrl) ? (
+                // If it's an image, show it
+                <img
+                  src={task.fileUrl}
+                  alt="Task attachment"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    maxHeight: "200px",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }} // Hide if link breaks
+                />
+              ) : (
+                // If it's a PDF/Doc, show a link
+                <a
+                  href={task.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: "12px",
+                    color: "#4f46e5",
+                    textDecoration: "underline",
+                  }}
+                >
+                  📎 View Attachment
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* --- 4. CATEGORY FOOTER --- */}
+          <div
+            style={{ fontSize: "12px", color: "#64748b", marginTop: "auto" }}
+          >
+            {task.category || "Feature"}
           </div>
         </div>
       )}
