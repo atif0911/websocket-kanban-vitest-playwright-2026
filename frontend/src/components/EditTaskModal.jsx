@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 export default function EditTaskModal({ task, onClose, onSave }) {
   const [title, setTitle] = useState(task.title);
   const [priority, setPriority] = useState(task.priority);
@@ -18,7 +20,7 @@ export default function EditTaskModal({ task, onClose, onSave }) {
       formData.append("file", selectedFile);
 
       try {
-        const response = await fetch("http://localhost:5000/api/upload", {
+        const response = await fetch(`${API_URL}/api/upload`, {
           method: "POST",
           body: formData,
         });

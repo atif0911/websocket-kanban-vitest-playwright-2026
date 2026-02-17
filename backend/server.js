@@ -29,6 +29,12 @@ connectDB();
 
 const app = express();
 app.use(cors());
+app.use(
+  cors({
+    origin: "https://your-project-frontend.vercel.app", // Replace with your actual Vercel URL later
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 app.post("/api/upload", (req, res) => {
