@@ -21,4 +21,7 @@ export default defineConfig({
     exclude: ["node_modules", "src/tests/e2e"],
   },
   plugins: [react()],
+  define: {
+    "process.env": {},
+  },
 });
