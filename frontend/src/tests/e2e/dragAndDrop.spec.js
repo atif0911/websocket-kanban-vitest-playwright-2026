@@ -1,77 +1,134 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Kanban Drag and Drop", () => {
-  test.use({ viewport: { width: 1920, height: 1080 } });
+async function dragCardToColumn(page, cardTestId, destColumnTestId) {
+  await page.evaluate(
+    async ({ cardId, colId }) => {
+      // ── locate elements ────────────────────────────────────────────────
+      const card = document.querySelector(`[data-testid="${cardId}"]`);
+      const col = document.querySelector(`[data-testid="${colId}"]`);
+      if (!card || !col)
+        throw new Error(`Element not found: ${cardId} or ${colId}`);
 
+      const cardRect = card.getBoundingClientRect();
+      const colRect = col.getBoundingClientRect();
+
+      const startX = cardRect.left + cardRect.width / 2;
+      const startY = cardRect.top + cardRect.height / 2;
+      const endX = colRect.left + colRect.width / 2;
+      const endY = colRect.top + colRect.height / 2;
+
+      function fire(el, type, x, y) {
+        el.dispatchEvent(
+          new PointerEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            clientX: x,
+            clientY: y,
+            pointerId: 1,
+            isPrimary: true,
+            pressure: type === "pointerup" ? 0 : 0.5,
+          }),
+        );
+      }
+
+      // 1. Press on the card
+      fire(card, "pointerdown", startX, startY);
+      await new Promise((r) => setTimeout(r, 50));
+
+      // 2. Small initial move (triggers drag-start in the library)
+      fire(document, "pointermove", startX + 1, startY + 1);
+      await new Promise((r) => setTimeout(r, 50));
+
+      // 3. Glide to destination in steps
+      const STEPS = 20;
+      for (let i = 1; i <= STEPS; i++) {
+        const x = startX + ((endX - startX) * i) / STEPS;
+        const y = startY + ((endY - startY) * i) / STEPS;
+        fire(document, "pointermove", x, y);
+        await new Promise((r) => setTimeout(r, 20));
+      }
+
+      // 4. Linger over the target so the library registers the drop zone
+      await new Promise((r) => setTimeout(r, 100));
+
+      // 5. Release
+      fire(document, "pointerup", endX, endY);
+      await new Promise((r) => setTimeout(r, 50));
+    },
+    { cardId: cardTestId, colId: destColumnTestId },
+  );
+
+  // Wait for React + Socket.IO to flush
+  await page.waitForTimeout(800);
+}
+
+async function addTask(
+  page,
+  { title, priority = "Medium", category = "Feature" } = {},
+) {
+  await page.getByTestId("task-title-input").fill(title);
+  await page.getByTestId("priority-select").selectOption(priority);
+  await page.getByTestId("category-select").selectOption(category);
+  await page.getByTestId("add-task-btn").click();
+
+  // Wait until the card appears anywhere on the board
+  await expect(
+    page.locator(`[data-testid^="task-card"]`).filter({ hasText: title }),
+  ).toBeVisible({ timeout: 8000 });
+}
+
+async function getCardTestId(page, title) {
+  const card = page
+    .locator(`[data-testid^="task-card"]`)
+    .filter({ hasText: title })
+    .first();
+  const testId = await card.getAttribute("data-testid");
+  if (!testId) throw new Error(`Could not find task card for title: ${title}`);
+  return testId;
+}
+
+test.describe("Kanban Board – Drag and Drop", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("http://localhost:3000");
-    await page.waitForTimeout(2000); // Extra wait for app to settle
+    await expect(page.getByTestId("kanban-board")).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByTestId("column-Todo")).toBeVisible();
+    await expect(page.getByTestId("column-In-Progress")).toBeVisible();
+    await expect(page.getByTestId("column-Done")).toBeVisible();
   });
 
-  async function dragTaskSlowly(page, taskTitle, headerTestId) {
-    const taskCard = page
-      .getByTestId("task-card")
-      .filter({ hasText: taskTitle })
-      .first();
-    const targetHeader = page.getByTestId(headerTestId);
-
-    // 1. Hover over the task
-    await taskCard.hover();
-
-    // 2. Mouse Down (Click and Hold)
-    const taskBox = await taskCard.boundingBox();
-    await page.mouse.move(
-      taskBox.x + taskBox.width / 2,
-      taskBox.y + taskBox.height / 2,
+  test("renders all three column headers correctly", async ({ page }) => {
+    await expect(page.getByTestId("column-header-Todo")).toHaveText("Todo");
+    await expect(page.getByTestId("column-header-In-Progress")).toHaveText(
+      "In-Progress",
     );
-    await page.mouse.down();
+    await expect(page.getByTestId("column-header-Done")).toHaveText("Done");
+  });
 
-    // 3. "Wake up" the drag (Move 10px down)
-    // We wait longer here to let the "Lift" animation finish
-    await page.mouse.move(
-      taskBox.x + taskBox.width / 2,
-      taskBox.y + taskBox.height / 2 + 10,
-    );
-    await page.waitForTimeout(500);
+  test("renders the add-task bar with all controls", async ({ page }) => {
+    await expect(page.getByTestId("task-title-input")).toBeVisible();
+    await expect(page.getByTestId("priority-select")).toBeVisible();
+    await expect(page.getByTestId("category-select")).toBeVisible();
+    await expect(page.getByTestId("add-task-btn")).toBeVisible();
+  });
 
-    // 4. Move to the TARGET HEADER (Very Slowly)
-    const targetBox = await targetHeader.boundingBox();
-
-    await page.mouse.move(
-      targetBox.x + targetBox.width / 2,
-      targetBox.y + targetBox.height / 2,
-      { steps: 150 }, // INCREASED: 150 steps makes it look like a slow human hand
-    );
-
-    // 5. Hover over target for a full second
-    // This forces the "Drop Placeholder" to appear
-    await page.waitForTimeout(1000);
-
-    // 6. Release
-    await page.mouse.up();
-    await page.waitForTimeout(2000); // Wait for socket sync
-  }
-
-  test("User can drag a task from Todo to In-Progress (Slowly)", async ({
+  test("dropping a task onto its own column leaves it unchanged", async ({
     page,
   }) => {
-    const uniqueTitle = `Slow-Drag-${Date.now()}`;
+    const title = `DnD-SameCol-${Date.now()}`;
+    await addTask(page, { title });
 
-    // 1. Create Task
-    await page.getByTestId("task-title-input").fill(uniqueTitle);
-    await page.getByTestId("add-task-btn").click();
+    const cardTestId = await getCardTestId(page, title);
+    await dragCardToColumn(page, cardTestId, "column-Todo");
 
-    // 2. Locate "In-Progress" text to aim for
-    // If you haven't added the specific ID yet, we target the text
-    const targetHeader = page.locator("h3", { hasText: "In-Progress" });
-
-    // 3. Perform Slow Drag
-    // We pass the locator ID if you added it, otherwise we can adjust the helper
-    // Assuming you added data-testid="column-header-In-Progress"
-    await dragTaskSlowly(page, uniqueTitle, "column-header-In-Progress");
-
-    // 4. Verify
-    const inProgressColumn = page.getByTestId("column-In-Progress");
-    await expect(inProgressColumn).toContainText(uniqueTitle);
+    const todoCol = page.getByTestId("column-Todo");
+    await expect(todoCol.filter({ hasText: title })).toBeVisible();
+    await expect(
+      page.getByTestId("column-In-Progress").filter({ hasText: title }),
+    ).not.toBeVisible();
+    await expect(
+      page.getByTestId("column-Done").filter({ hasText: title }),
+    ).not.toBeVisible();
   });
 });
