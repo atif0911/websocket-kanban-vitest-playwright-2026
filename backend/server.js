@@ -31,7 +31,7 @@ const app = express();
 app.use(cors());
 app.use(
   cors({
-    origin: "https://your-project-frontend.vercel.app", // Replace with your actual Vercel URL later
+    origin: "https://websocket-kanban-vitest-playwright-opal.vercel.app/", // Replace with your actual Vercel URL later
     credentials: true,
   }),
 );
@@ -42,7 +42,7 @@ app.post("/api/upload", (req, res) => {
 
   uploadSingle(req, res, (err) => {
     if (err) {
-      console.error("MULTER ERROR:", err); 
+      console.error("MULTER ERROR:", err);
       return res.status(500).json({ error: err.message });
     }
 
