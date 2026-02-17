@@ -30,7 +30,7 @@ connectDB();
 const app = express();
 app.use(
   cors({
-    origin: "https://websocket-kanban-vitest-playwright-opal.vercel.app/", // Replace with your actual Vercel URL later
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     credentials: true,
   }),
 );
@@ -57,7 +57,7 @@ app.post("/api/upload", (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://websocket-kanban-vitest-playwright-opal.vercel.app",
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     methods: ["GET", "POST"],
   },
 });
