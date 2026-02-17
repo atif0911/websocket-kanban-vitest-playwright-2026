@@ -28,7 +28,6 @@ const connectDB = require("./db");
 connectDB();
 
 const app = express();
-app.use(cors());
 app.use(
   cors({
     origin: "https://websocket-kanban-vitest-playwright-opal.vercel.app/", // Replace with your actual Vercel URL later
@@ -58,7 +57,7 @@ app.post("/api/upload", (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "https://websocket-kanban-vitest-playwright-opal.vercel.app",
     methods: ["GET", "POST"],
   },
 });
@@ -124,4 +123,5 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(5000, () => console.log("Server running on port 5000"));
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
