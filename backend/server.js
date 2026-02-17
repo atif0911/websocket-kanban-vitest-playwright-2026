@@ -27,10 +27,16 @@ const upload = multer({ storage: storage });
 const connectDB = require("./db");
 connectDB();
 
+const allowedOrigins = [
+  "http://localhost:3000", // Keep this for local development
+  "http://localhost:5173", // Vite local dev
+  "https://websocket-kanban-vitest-playwright-ecru.vercel.app", // <--- ADD THIS!
+];
+
 const app = express();
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: allowedOrigins || "http://localhost:3000",
     credentials: true,
   }),
 );
@@ -57,7 +63,7 @@ app.post("/api/upload", (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: allowedOrigins || "http://localhost:3000",
     methods: ["GET", "POST"],
   },
 });
